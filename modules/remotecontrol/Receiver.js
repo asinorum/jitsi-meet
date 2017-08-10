@@ -124,6 +124,7 @@ export default class Receiver extends RemoteControlParticipant {
         if (!this._controller) {
             return;
         }
+        this.emit('active-changed', false);
         logger.log('Remote control receiver stop.');
         this._controller = null;
         APP.conference.removeConferenceListener(ConferenceEvents.USER_LEFT,
@@ -177,6 +178,7 @@ export default class Receiver extends RemoteControlParticipant {
                     && message.action === PERMISSIONS_ACTIONS.request) {
                 const userId = participant.getId();
 
+                this.emit('active-changed', true);
                 APP.store.dispatch(
                     openRemoteControlAuthorizationDialog(userId));
             } else if (this._controller === participant.getId()) {
@@ -200,6 +202,7 @@ export default class Receiver extends RemoteControlParticipant {
      * @returns {void}
      */
     deny(userId: string) {
+        this.emit('active-changed', false);
         this.sendRemoteControlEndpointMessage(userId, {
             type: EVENTS.permissions,
             action: PERMISSIONS_ACTIONS.deny

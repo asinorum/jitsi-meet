@@ -87,6 +87,15 @@ export default class Controller extends RemoteControlParticipant {
     }
 
     /**
+     * Returns the current active participant's id.
+     *
+     * @returns {string|null} - The id of the current active participant.
+     */
+    get activeParticipant(): string | null {
+        return this._requestedParticipant || this._controlledParticipant;
+    }
+
+    /**
      * Requests permissions from the remote control receiver side.
      *
      * @param {string} userId - The user id of the participant that will be
@@ -100,7 +109,7 @@ export default class Controller extends RemoteControlParticipant {
         if (!this._enabled) {
             return Promise.reject(new Error('Remote control is disabled!'));
         }
-
+        this.emit('active-changed', true);
         this._area = eventCaptureArea;// $("#largeVideoWrapper")
         logger.log(`Requsting remote control permissions from: ${userId}`);
 
@@ -124,16 +133,21 @@ export default class Controller extends RemoteControlParticipant {
                 try {
                     result = this._handleReply(participant, event);
                 } catch (e) {
+                    this.emit('active-changed', false);
                     clearRequest();
                     reject(e);
                 }
                 if (result !== null) {
+                    if (result === false) {
+                        this.emit('active-changed', false);
+                    }
                     clearRequest();
                     resolve(result);
                 }
             };
             onUserLeft = id => {
                 if (id === this._requestedParticipant) {
+                    this.emit('active-changed', false);
                     clearRequest();
                     resolve(null);
                 }
@@ -301,6 +315,7 @@ export default class Controller extends RemoteControlParticipant {
         if (!this._controlledParticipant) {
             return;
         }
+        this.emit('active-changed', false);
         logger.log('Stopping remote control controller.');
         APP.UI.removeListener(UIEvents.LARGE_VIDEO_ID_CHANGED,
             this._largeVideoChangedListener);

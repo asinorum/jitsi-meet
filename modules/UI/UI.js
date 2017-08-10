@@ -1231,6 +1231,26 @@ UI.getRemoteVideosCount = () => VideoLayout.getRemoteVideosCount();
 UI.setRemoteThumbnailsVisibility
     = shouldHide => Filmstrip.setRemoteVideoVisibility(shouldHide);
 
+/**
+ * Handles remote control active events for a remote participant.
+ *
+ * @param {JitsiParticipant} participant - The remote participant.
+ * @param {boolean} isActive - The new remote control active status.
+ * @returns {void}
+ */
+UI.onRemoteControlActiveChanged = function(participant, isActive) {
+    VideoLayout.onRemoteControlActiveChanged(participant.getId(), isActive);
+};
+
+/**
+ * Handles remote control active events for the local participant.
+ *
+ * @returns {void}
+ */
+UI.onLocalRemoteControlActiveChanged = function() {
+    VideoLayout.onLocalRemoteControlActiveChanged();
+};
+
 const UIListeners = new Map([
     [
         UIEvents.ETHERPAD_CLICKED,

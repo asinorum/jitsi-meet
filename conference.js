@@ -1839,10 +1839,26 @@ export default {
             ConferenceEvents.LOCK_STATE_CHANGED,
             (...args) => APP.store.dispatch(lockStateChanged(room, ...args)));
 
+        APP.remoteControl.on('active-changed', isActive => {
+            room.setLocalParticipantProperty(
+                "remoteControlSessionStatus",
+                isActive
+            );
+            APP.UI.onLocalRemoteControlActiveChanged();
+        });
+
         room.on(ConferenceEvents.PARTICIPANT_PROPERTY_CHANGED,
                 (participant, name, oldValue, newValue) => {
-            if (name === "raisedHand") {
+            switch (name) {
+            case 'raisedHand':
                 APP.UI.setRaisedHandStatus(participant, newValue);
+                break;
+            case 'remoteControlSessionStatus':
+                // do something
+                APP.UI.onRemoteControlActiveChanged(participant, newValue);
+                break;
+            default:
+            // ignore
             }
         });
 
@@ -2385,6 +2401,7 @@ export default {
             APP.UI.setLocalRaisedHandStatus(raisedHand);
         }
     },
+
     /**
      * Log event to callstats and analytics.
      * @param {string} name the event name

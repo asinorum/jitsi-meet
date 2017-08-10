@@ -1,5 +1,6 @@
 /* @flow */
 
+import EventEmitter from 'events';
 import { getLogger } from 'jitsi-meet-logger';
 
 import { DISCO_REMOTE_CONTROL_FEATURE }
@@ -16,7 +17,8 @@ declare var config: Object;
 /**
  * Implements the remote control functionality.
  */
-class RemoteControl {
+class RemoteControl extends EventEmitter {
+    _active: boolean;
     _initialized: boolean;
     controller: Controller;
     receiver: Receiver;
@@ -25,8 +27,35 @@ class RemoteControl {
      * Constructs new instance. Creates controller and receiver properties.
      */
     constructor() {
+        super();
         this.controller = new Controller();
+        this._active = false;
         this._initialized = false;
+
+        // eslint-disable-next-line no-return-assign
+        this.controller.on('active-changed', active => this.active = active);
+    }
+
+    /**
+     * Sets the remote control session active status.
+     *
+     * @param {boolean} isActive - True - if the controller or the receiver is
+     * currently in remote control session and false otherwise.
+     * @returns {void}
+     */
+    set active(isActive: boolean) {
+        this._active = isActive;
+        this.emit('active-changed', isActive);
+    }
+
+    /**
+     * Returns the remote control session active status.
+     *
+     * @returns {boolean} - True - if the controller or the receiver is
+     * currently in remote control session and false otherwise.
+     */
+    get active(): boolean {
+        return this._active;
     }
 
     /**
@@ -45,6 +74,9 @@ class RemoteControl {
         this._initialized = true;
         this.controller.enable(true);
         this.receiver = new Receiver();
+
+        // eslint-disable-next-line no-return-assign
+        this.receiver.on('active-changed', active => this.active = active);
     }
 
     /**
